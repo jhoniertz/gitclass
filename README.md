@@ -1,0 +1,2 @@
+# gitclass
+repositorio para practica
