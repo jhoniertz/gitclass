@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de usuarios</title>
+    <link rel="stylesheet" href="stilos.css">
+    <style>
+        body{font-family:Arial,Helvetica,sans-serif;max-width:800px;margin:24px auto;padding:0 12px}
+        form label{display:block;margin:8px 0}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{border:1px solid #ccc;padding:8px;text-align:left}
+        button{cursor:pointer}
+        #message{color:green;margin-top:8px}
+    </style>
+</head>
+<body>
+    <h1>Registro de usuarios</h1>
+
+    <form id="regForm">
+        <label>Nombre: <input type="text" id="name" required></label>
+        <label>Email: <input type="email" id="email" required></label>
+        <button type="submit">Registrar</button>
+    </form>
+
+    <div id="message" aria-live="polite"></div>
+
+    <h2>Usuarios registrados</h2>
+    <table id="usersTable">
+        <thead>
+            <tr><th>Nombre</th><th>Email</th><th>Acciones</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+    const form = document.getElementById('regForm');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const message = document.getElementById('message');
+    const usersTableBody = document.querySelector('#usersTable tbody');
+
+    function getUsers(){
+        return JSON.parse(localStorage.getItem('users') || '[]');
+    }
+    function saveUsers(u){
+        localStorage.setItem('users', JSON.stringify(u));
+    }
+    function escapeHtml(s){
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function renderUsers(){
+        const users = getUsers();
+        usersTableBody.innerHTML = '';
+        users.forEach((u, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td><button data-index="${i}" class="del">Eliminar</button></td>`;
+            usersTableBody.appendChild(tr);
+        });
+    }
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        if(!name || !email){
+            message.style.color = 'red';
+            message.textContent = 'Completa todos los campos.';
+            return;
+        }
+        const users = getUsers();
+        users.push({name, email});
+        saveUsers(users);
+        form.reset();
+        message.style.color = 'green';
+        message.textContent = 'Usuario registrado.';
+        renderUsers();
+    });
+
+    usersTableBody.addEventListener('click', e => {
+        if(e.target.matches('button.del')){
+            const idx = Number(e.target.dataset.index);
+            const users = getUsers();
+            users.splice(idx, 1);
+            saveUsers(users);
+            renderUsers();
+        }
+    });
+
+    // Inicializa la vista
+    renderUsers();
+    </script>
+</body>
+</html>
